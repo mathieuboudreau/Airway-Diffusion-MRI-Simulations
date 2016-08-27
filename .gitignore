@@ -1,0 +1,5 @@
+# Compiled files
+bin/
+
+# Mac files
+.DS_Store
