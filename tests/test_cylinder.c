@@ -67,7 +67,7 @@ START_TEST(test_point_on_the_surface_of_cylinder_corner_of_both_flat_curve)
 {
     gsl_vector * v = gsl_vector_alloc (3);
     
-    gsl_vector_set (v, 0, 1.0);
+    gsl_vector_set (v, 0, 0.0);
     gsl_vector_set (v, 1, 1.0);
     gsl_vector_set (v, 2, 1.0);
 
