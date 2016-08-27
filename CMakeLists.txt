@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 2.6)
+project (LungDiff)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+add_subdirectory (src)
+add_subdirectory (tests)
