@@ -85,42 +85,95 @@ END_TEST
 START_TEST(test_point_inside_sphere)
 {
     gsl_vector * v = gsl_vector_alloc (3);
-    
+    gsl_vector * origin = gsl_vector_alloc (3);
+
     gsl_vector_set (v, 0, 1.0);
     gsl_vector_set (v, 1, 1.0);
     gsl_vector_set (v, 2, 1.0);
 
+    gsl_vector_set (origin, 0, 0.0);
+    gsl_vector_set (origin, 1, 0.0);
+    gsl_vector_set (origin, 2, 0.0);
+
     double sph_radius = 2.0;
     
-    ck_assert_int_eq(sphere(v, sph_radius),(int)1);
+    ck_assert_int_eq(sphere(v, origin, sph_radius),(int)1);
 }
 END_TEST
 
 START_TEST(test_point_outside_sphere)
 {
     gsl_vector * v = gsl_vector_alloc (3);
-    
+    gsl_vector * origin = gsl_vector_alloc (3);
+
     gsl_vector_set (v, 0, 1.0);
     gsl_vector_set (v, 1, 1.0);
     gsl_vector_set (v, 2, 1.0);
 
+    gsl_vector_set (origin, 0, 0.0);
+    gsl_vector_set (origin, 1, 0.0);
+    gsl_vector_set (origin, 2, 0.0);
+
     double sph_radius = 0.5;
     
-    ck_assert_int_eq(sphere(v, sph_radius),(int)0);
+    ck_assert_int_eq(sphere(v, origin, sph_radius),(int)0);
 }
 END_TEST
 
 START_TEST(test_point_on_the_surface_of_sphere)
 {
     gsl_vector * v = gsl_vector_alloc (3);
-    
+    gsl_vector * origin = gsl_vector_alloc (3);
+
     gsl_vector_set (v, 0, 0.0);
     gsl_vector_set (v, 1, 0.0);
     gsl_vector_set (v, 2, 1.0);
 
+    gsl_vector_set (origin, 0, 0.0);
+    gsl_vector_set (origin, 1, 0.0);
+    gsl_vector_set (origin, 2, 0.0);
+
+    double sph_radius = 1.0;
+
+    ck_assert_int_eq(sphere(v, origin, sph_radius),(int)1);
+}
+END_TEST
+
+START_TEST(test_point_inside_sphere_with_translated_origin)
+{
+    gsl_vector * v = gsl_vector_alloc (3);
+    gsl_vector * origin = gsl_vector_alloc (3);
+
+    gsl_vector_set (v, 0, 6.0);
+    gsl_vector_set (v, 1, 1.0);
+    gsl_vector_set (v, 2, 1.0);
+
+    gsl_vector_set (origin, 0, 5.0);
+    gsl_vector_set (origin, 1, 0.0);
+    gsl_vector_set (origin, 2, 0.0);
+
+    double sph_radius = 2.0;
+    
+    ck_assert_int_eq(sphere(v, origin, sph_radius),(int)1);
+}
+END_TEST
+
+START_TEST(test_point_on_the_surface_of_sphere_with_translated_origin)
+{
+    gsl_vector * v = gsl_vector_alloc (3);
+    gsl_vector * origin = gsl_vector_alloc (3);
+
+    gsl_vector_set (v, 0, 0.0);
+    gsl_vector_set (v, 1, 0.0);
+    gsl_vector_set (v, 2, 1.0);
+
+    gsl_vector_set (origin, 0, 0.0);
+    gsl_vector_set (origin, 1, 0.0);
+    gsl_vector_set (origin, 2, 2.0);
+
     double sph_radius = 1.0;
     
-    ck_assert_int_eq(sphere(v, sph_radius),(int)1);
+    ck_assert_int_eq(sphere(v, origin, sph_radius),(int)1);
 }
 END_TEST
 
@@ -147,13 +200,13 @@ Suite * lung_diff_suite(void)
     tcase_add_test(tc_core, test_point_inside_sphere);
     tcase_add_test(tc_core, test_point_outside_sphere);
     tcase_add_test(tc_core, test_point_on_the_surface_of_sphere);
+    tcase_add_test(tc_core, test_point_inside_sphere_with_translated_origin);
+    tcase_add_test(tc_core, test_point_on_the_surface_of_sphere_with_translated_origin);
 
     suite_add_tcase(s, tc_core);
 
     return s;
 }
-
-
 
 int main(void)
 {

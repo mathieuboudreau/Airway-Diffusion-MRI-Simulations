@@ -33,9 +33,9 @@ int cylinder(const gsl_vector * v, const double cyl_radius, const double cyl_len
     }
 }
 
-int sphere(const gsl_vector * v, const double sph_radius)
+int sphere(const gsl_vector * v, const gsl_vector * origin, const double sph_radius)
 {
-    /* Evaluates if a 3D point is inside a sphere who's center is fixed at the origin.
+    /* Evaluates if a 3D point is inside a sphere positioned at an arbitrary origin.
     
     To Do: Add check that sph_radius positive.
     */
@@ -46,9 +46,12 @@ int sphere(const gsl_vector * v, const double sph_radius)
     double y = gsl_vector_get(v, 1);
     double z = gsl_vector_get(v, 2);
     
+    double ox = gsl_vector_get(origin, 0);
+    double oy = gsl_vector_get(origin, 1);
+    double oz = gsl_vector_get(origin, 2);
     
     /* In-plane distance squared of point away from origin */
-    double d_dist_sq   = gsl_pow_2(x)+gsl_pow_2(y)+gsl_pow_2(z);
+    double d_dist_sq   = gsl_pow_2(x-ox)+gsl_pow_2(y-oy)+gsl_pow_2(z-oz);
     double d_radius_sq = gsl_pow_2(sph_radius);
     
 
