@@ -1,6 +1,6 @@
 #include <check.h>
 #include <gsl/gsl_vector.h>
-#include "../src/morphology/cylinder.h"
+#include "../src/morphology/shapes.h"
 
 START_TEST(test_point_inside_cylinder)
 {
@@ -83,8 +83,8 @@ Suite * lung_diff_suite(void)
     Suite *s;
     TCase *tc_core;
 
-    s = suite_create("Lung Diffusion simulation");
-
+    s = suite_create("Shapes test");
+    
     /* Core test case */
     tc_core = tcase_create("Core");
 
