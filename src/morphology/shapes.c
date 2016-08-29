@@ -1,7 +1,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sys.h>
 #include <gsl/gsl_vector.h>
-#include "../util/calcepsilon.h"
+#include "../util/machine_properties.h"
 
 int cylinder(const gsl_vector * v, const gsl_vector * origin, const double cyl_radius, const double cyl_length)
 {
