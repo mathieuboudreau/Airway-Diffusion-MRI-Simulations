@@ -8,8 +8,8 @@ int main(void)
     Suite *s;
     SRunner *sr;
 
-    s = shapes_suite();
-    sr = srunner_create(s);
+    sr = srunner_create(shapes_suite());
+    /*srunner_add_suite(sr, template_suite());*/
 
     srunner_run_all(sr, CK_NORMAL);
     number_failed = srunner_ntests_failed(sr);
