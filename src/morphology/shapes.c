@@ -3,7 +3,7 @@
 #include <gsl/gsl_vector.h>
 #include "../util/calcepsilon.h"
 
-int cylinder(const gsl_vector * v, const double cyl_radius, const double cyl_length)
+int cylinder(const gsl_vector * v, const gsl_vector * origin, const double cyl_radius, const double cyl_length)
 {
     /* Evaluates if a 3D point is inside a cylinder who's bottom is fixed at the center origin.
     
@@ -16,9 +16,11 @@ int cylinder(const gsl_vector * v, const double cyl_radius, const double cyl_len
     double y = gsl_vector_get(v, 1);
     double z = gsl_vector_get(v, 2);
     
+    double ox = gsl_vector_get(origin, 0);
+    double oy = gsl_vector_get(origin, 1);
     
     /* In-plane distance squared of point away from origin */
-    double d_dist_sq   = gsl_pow_2(x)+gsl_pow_2(y);
+    double d_dist_sq   = gsl_pow_2(x-ox)+gsl_pow_2(y-oy);
     double d_radius_sq = gsl_pow_2(cyl_radius);
     
 
