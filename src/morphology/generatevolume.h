@@ -6,5 +6,6 @@ struct Volume
     int zdim;
 };
 
-void allocvolume(struct Volume * v);
-void freevolume(struct Volume * v);
+void generatevolume(struct Volume * v, int (*shape)() );
+void allocvolume   (struct Volume * v);
+void freevolume    (struct Volume * v);

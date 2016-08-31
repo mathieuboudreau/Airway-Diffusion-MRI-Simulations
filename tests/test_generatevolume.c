@@ -13,7 +13,10 @@ Suite * generatevolume_suite(void)
 
     /* alloc() */
     tcase_add_test(tc_core, test_that_allocvolume_returns_array_with_dimensions_that_match_func_arg);
-
+    
+    /* generatevolume() */
+    tcase_add_test(tc_core, test_that_generatevolume_with_cylinder_arg_returns_properly_defined_cylinder_mask);
+    
     suite_add_tcase(s, tc_core);
 
     return s;
