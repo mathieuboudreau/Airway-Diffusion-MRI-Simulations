@@ -4,14 +4,14 @@
 void allocvolume(struct Volume * v)
 {
 
-    /* allocate each row's place holder */
-    v->array = malloc(sizeof(int*) * v->xdim);
+    /* allocate each row's place holder and initialize to 0 */
+    v->array = calloc(v->xdim, sizeof(int*));
 
-    /* allocate each row's columns */
+    /* allocate each row's columns and initialize to 0 */
     for(int x = 0; x < v->xdim; x++){
-        v->array[x] = malloc(sizeof(int*) * v->ydim);
+        v->array[x] = calloc(v->ydim, sizeof(int*));
         for(int y = 0; y < v->ydim; y++){
-            v->array[x][y] = malloc(sizeof(int*) * v->zdim);
+            v->array[x][y] = calloc(v->zdim,sizeof(int*));
         }
     }
 
