@@ -10,6 +10,7 @@ int main(void)
 
     sr = srunner_create(shapes_suite());
     srunner_add_suite(sr, buddedcylinder_suite());
+    srunner_add_suite(sr, generatevolume_suite());
     srunner_add_suite(sr, machine_properties_suite());
 
     srunner_run_all(sr, CK_NORMAL);
