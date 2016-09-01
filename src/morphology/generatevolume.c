@@ -33,6 +33,9 @@ void generatevolume(struct Volume * v, int (*shape)(), struct BuddedCylinderPara
             }
         }
     }
+    
+    gsl_vector_free(p);
+    gsl_vector_free(origin);
 
 }
 
