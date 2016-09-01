@@ -18,5 +18,6 @@ struct BuddedCylinderParams
 };
 
 struct BuddedCylinderParams setupHealthyBuddedCylinder(void);
+struct BuddedCylinderParams setupDiseasedBuddedCylinder(void);
 
 #endif
