@@ -1,5 +1,5 @@
 #ifndef _BUDDEDCYLINDER_H
-#define _BUDDEDCYLINDE_H
+#define _BUDDEDCYLINDER_H
 
 
 int buddedcylinder(const gsl_vector * v,
