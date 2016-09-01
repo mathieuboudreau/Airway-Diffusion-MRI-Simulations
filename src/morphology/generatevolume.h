@@ -1,3 +1,5 @@
+#include "../params/default_buddedcylinders.h"
+
 struct Volume
 {
     int ***array;
@@ -6,6 +8,6 @@ struct Volume
     int zdim;
 };
 
-void generatevolume(struct Volume * v, int (*shape)() );
+void generatevolume(struct Volume * v, int (*shape)(), struct BuddedCylinderParams * params);
 void allocvolume   (struct Volume * v);
 void freevolume    (struct Volume * v);

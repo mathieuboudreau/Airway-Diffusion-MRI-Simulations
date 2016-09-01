@@ -3,6 +3,7 @@
 #include <gsl/gsl_vector.h>
 #include "../src/morphology/generatevolume.h"
 #include "../src/morphology/buddedcylinder.h"
+#include "../src/params/default_buddedcylinders.h"
 
 /* Begin: int allocvolume(const int * dims[3]) */
 
@@ -29,20 +30,22 @@ END_TEST
 
 START_TEST(test_that_generatevolume_with_cylinder_arg_returns_properly_defined_cylinder_mask)
 {
-    struct Volume volume;
+    struct BuddedCylinderParams bcParams = setupHealthyBuddedCylinder();
 
-    volume.xdim = 92;
-    volume.ydim = 92;
-    volume.zdim = 72;
+    struct Volume volume;
+    volume.xdim = bcParams.xdim;
+    volume.ydim = bcParams.ydim;
+    volume.zdim = bcParams.zdim;
+
     double sqrt2 = M_SQRT2;
 
     allocvolume(&volume);
 
-    generatevolume(&volume, &buddedcylinder);
+    generatevolume(&volume, &buddedcylinder, &bcParams);
     
-    ck_assert(volume.array[volume.xdim/2-1][volume.ydim/2-1][volume.zdim/2-1]==1);
-    ck_assert(volume.array[(volume.xdim/2-1) + 24 + 16][(volume.ydim/2-1)][(volume.zdim/4 * 3) - 1]==1);
-    ck_assert(volume.array[(volume.xdim/2-1) + (int)ceil((24 + 16)/sqrt2)][(volume.ydim/2-1) + (int)ceil((24 + 16)/sqrt2)][(volume.zdim/4) - 1]==1);
+    ck_assert(volume.array[bcParams.xdim/2-1][bcParams.ydim/2-1][bcParams.zdim/2-1]==1);
+    ck_assert(volume.array[(bcParams.xdim/2-1) + bcParams.sphere_translation_unit_steps + bcParams.sphere_radius_unit_steps][bcParams.ydim/2-1][(bcParams.zdim/4 * 3) - 1]==1);
+    ck_assert(volume.array[(bcParams.xdim/2-1) + (int)ceil((double)(bcParams.sphere_translation_unit_steps + bcParams.sphere_radius_unit_steps)/sqrt2)][(bcParams.ydim/2-1) + (int)ceil((double)(bcParams.sphere_translation_unit_steps + bcParams.sphere_radius_unit_steps)/sqrt2)][(bcParams.zdim/4) - 1]==1);
 
     freevolume(&volume);
 }

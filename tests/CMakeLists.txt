@@ -1,4 +1,5 @@
 include_directories ("${CMAKE_SOURCE_DIR}/src/morphology")
+include_directories ("${CMAKE_SOURCE_DIR}/src/params")
 include_directories ("${CMAKE_SOURCE_DIR}/src/util")
 
 # add the executable
@@ -15,6 +16,7 @@ target_link_libraries(unit_tests
                       gsl
                       morphology
                       util
+                      params
                       test_shapes
                       test_buddedcylinder
                       test_generatevolume
