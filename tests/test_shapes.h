@@ -1,3 +1,6 @@
+#ifndef _TEST_SHAPES_H
+#define _TEST_SHAPES_H
+
 #include <check.h>
 #include <gsl/gsl_vector.h>
 #include "../src/morphology/shapes.h"
@@ -244,3 +247,5 @@ START_TEST(test_point_on_the_surface_of_sphere_with_translated_origin)
 END_TEST
 
 /* End: int sphere  (const gsl_vector * v, const double sph_radius) */
+
+#endif

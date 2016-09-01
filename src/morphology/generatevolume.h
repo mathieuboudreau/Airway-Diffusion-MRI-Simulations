@@ -1,3 +1,6 @@
+#ifndef _GENERATEVOLUME_H
+#define _GENERATEVOLUME_H
+
 #include "../params/default_buddedcylinders.h"
 
 struct Volume
@@ -11,3 +14,5 @@ struct Volume
 void generatevolume(struct Volume * v, int (*shape)(), struct BuddedCylinderParams * params);
 void allocvolume   (struct Volume * v);
 void freevolume    (struct Volume * v);
+
+#endif

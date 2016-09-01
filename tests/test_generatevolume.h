@@ -1,3 +1,6 @@
+#ifndef _TEST_GENERATEVOLUME_H
+#define _TEST_GENERATEVOLUME_H
+
 #include <check.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
@@ -52,3 +55,5 @@ START_TEST(test_that_generatevolume_with_cylinder_arg_returns_properly_defined_c
 END_TEST
 
 /* End: int allocvolume() */
+
+#endif

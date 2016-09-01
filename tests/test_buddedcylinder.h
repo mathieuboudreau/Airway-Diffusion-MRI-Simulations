@@ -1,3 +1,6 @@
+#ifndef _TEST_BUDDEDCYLINDER_H
+#define _TEST_BUDDEDCYLINDER_H
+
 #include <check.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
@@ -101,3 +104,5 @@ START_TEST(test_point_outside_buddedcylinder)
 }
 END_TEST
 /* End: int buddedcylinder() */
+
+#endif
