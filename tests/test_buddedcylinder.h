@@ -3,10 +3,9 @@
 
 #include <check.h>
 #include <gsl/gsl_math.h>
-#include <gsl/gsl_vector.h>
 #include "../src/morphology/buddedcylinder.h"
 
-/* Begin: int buddedcylinder(const gsl_vector * v,
+/* Begin: int buddedcylinder(const double v[3],
                              const double cyl_radius,
                              const double cyl_length,
                              const double sphere_radius,
@@ -19,12 +18,11 @@ START_TEST(test_point_inside_buddedcylinder_cyl)
     double sphere_radius      = 2.0;
     double sphere_translation = 2.0;
 
-    gsl_vector * v = gsl_vector_alloc (3);
-    gsl_vector * origin = gsl_vector_alloc (3);
+    double v[3];
 
-    gsl_vector_set (v, 0, 0.0);
-    gsl_vector_set (v, 1, 0.0);
-    gsl_vector_set (v, 2, 4.0);
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = 4.0;
 
     ck_assert_int_eq(buddedcylinder(v, cyl_radius, cyl_length, sphere_radius, sphere_translation),(int)1);
 }
@@ -37,12 +35,11 @@ START_TEST(test_point_inside_buddecylinder_top_sphere)
     double sphere_radius      = 2.0;
     double sphere_translation = 2.0;
 
-    gsl_vector * v = gsl_vector_alloc (3);
-    gsl_vector * origin = gsl_vector_alloc (3);
+    double v[3];
 
-    gsl_vector_set (v, 0, 3.0);
-    gsl_vector_set (v, 1, 0.0);
-    gsl_vector_set (v, 2, 9.0);
+    v[0] = 3.0;
+    v[1] = 0.0;
+    v[2] = 9.0;
 
     ck_assert_int_eq(buddedcylinder(v, cyl_radius, cyl_length, sphere_radius, sphere_translation),(int)1);
 }
@@ -57,12 +54,11 @@ START_TEST(test_point_inside_buddecylinder_bottom_sphere)
     double sphere_radius      = 2.0;
     double sphere_translation = 2.0;
 
-    gsl_vector * v = gsl_vector_alloc (3);
-    gsl_vector * origin = gsl_vector_alloc (3);
+    double v[3];
 
-    gsl_vector_set (v, 0, 3.0/sqrt2);
-    gsl_vector_set (v, 1, 3.0/sqrt2);
-    gsl_vector_set (v, 2, 3.0);
+    v[0] = 3.0/sqrt2;
+    v[1] = 3.0/sqrt2;
+    v[2] = 3.0;
 
     ck_assert_int_eq(buddedcylinder(v, cyl_radius, cyl_length, sphere_radius, sphere_translation),(int)1);
 }
@@ -75,12 +71,11 @@ START_TEST(test_point_on_surface_of_buddecylinder_top_sphere)
     double sphere_radius      = 2.0;
     double sphere_translation = 2.0;
 
-    gsl_vector * v = gsl_vector_alloc (3);
-    gsl_vector * origin = gsl_vector_alloc (3);
+    double v[3];
 
-    gsl_vector_set (v, 0, 0.0);
-    gsl_vector_set (v, 1, -4.0);
-    gsl_vector_set (v, 2, 9.0);
+    v[0] = 0.0;
+    v[1] = -4.0;
+    v[2] = 9.0;
 
     ck_assert_int_eq(buddedcylinder(v, cyl_radius, cyl_length, sphere_radius, sphere_translation),(int)1);
 }
@@ -93,12 +88,11 @@ START_TEST(test_point_outside_buddedcylinder)
     double sphere_radius      = 2.0;
     double sphere_translation = 2.0;
 
-    gsl_vector * v = gsl_vector_alloc (3);
-    gsl_vector * origin = gsl_vector_alloc (3);
+    double v[3];
 
-    gsl_vector_set (v, 0, 5.0);
-    gsl_vector_set (v, 1, 0.0);
-    gsl_vector_set (v, 2, 4.0);
+    v[0] = 5.0;
+    v[1] = 0.0;
+    v[2] = 4.0;
 
     ck_assert_int_eq(buddedcylinder(v, cyl_radius, cyl_length, sphere_radius, sphere_translation),(int)0);
 }

@@ -2,7 +2,7 @@
 #define _BUDDEDCYLINDER_H
 
 
-int buddedcylinder(const gsl_vector * v,
+int buddedcylinder(const double v[3],
                    const double cyl_radius,
                    const double cyl_length,
                    const double sphere_radius,

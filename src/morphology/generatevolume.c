@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <gsl/gsl_vector.h>
 #include "generatevolume.h"
 #include "../params/default_buddedcylinders.h"
 
@@ -19,23 +18,20 @@ void generatevolume(struct Volume * v, int (*shape)(), struct BuddedCylinderPara
     double cyl_recenter_translation_x_dunit_steps  = (double)(params->xdim+1)/(double)2;
     double cyl_recenter_translation_y_dunit_steps  = (double)(params->ydim+1)/(double)2;
 
-    gsl_vector * p = gsl_vector_alloc (3);
-    gsl_vector * origin = gsl_vector_alloc (3);
+    double p[3];
+    double origin[3];
 
     for(int x = 0; x < v->xdim; x++){
         for(int y = 0; y < v->ydim; y++){
             for(int z = 0; z < v->zdim; z++){
-                gsl_vector_set (p, 0, (x - cyl_recenter_translation_x_dunit_steps) * dx);
-                gsl_vector_set (p, 1, (y - cyl_recenter_translation_y_dunit_steps) * dy);
-                gsl_vector_set (p, 2, z * dz);
+                p[0] = (x - cyl_recenter_translation_x_dunit_steps) * dx;
+                p[1] = (y - cyl_recenter_translation_y_dunit_steps) * dy;
+                p[2] = z * dz;
 
                 v->array[x][y][z] = shape(p, cyl_radius, cyl_length, sphere_radius, sphere_translation);
             }
         }
     }
-    
-    gsl_vector_free(p);
-    gsl_vector_free(origin);
 
 }
 

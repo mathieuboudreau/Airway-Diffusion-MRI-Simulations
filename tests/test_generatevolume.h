@@ -3,7 +3,6 @@
 
 #include <check.h>
 #include <gsl/gsl_math.h>
-#include <gsl/gsl_vector.h>
 #include "../src/morphology/generatevolume.h"
 #include "../src/morphology/buddedcylinder.h"
 #include "../src/params/default_buddedcylinders.h"

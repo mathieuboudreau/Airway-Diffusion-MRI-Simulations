@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <gsl/gsl_vector.h>
 #include "hdf5.h"
 #include <string.h>
 

@@ -1,9 +1,8 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sys.h>
-#include <gsl/gsl_vector.h>
 #include "../util/machine_properties.h"
 
-int cylinder(const gsl_vector * v, const gsl_vector * origin, const double cyl_radius, const double cyl_length)
+int cylinder(const double v[3], const double origin[3], const double cyl_radius, const double cyl_length)
 {
     /* Evaluates if a 3D point is inside a cylinder who's bottom is fixed at the center origin.
     
@@ -12,12 +11,12 @@ int cylinder(const gsl_vector * v, const gsl_vector * origin, const double cyl_r
     
     double d_eps = d_calc_epsilon();
     
-    double x = gsl_vector_get(v, 0);
-    double y = gsl_vector_get(v, 1);
-    double z = gsl_vector_get(v, 2);
+    double x = v[0];
+    double y = v[1];
+    double z = v[2];
     
-    double ox = gsl_vector_get(origin, 0);
-    double oy = gsl_vector_get(origin, 1);
+    double ox = origin[0];
+    double oy = origin[1];
     
     /* In-plane distance squared of point away from origin */
     double d_dist_sq   = gsl_pow_2(x-ox)+gsl_pow_2(y-oy);
@@ -35,7 +34,7 @@ int cylinder(const gsl_vector * v, const gsl_vector * origin, const double cyl_r
     }
 }
 
-int sphere(const gsl_vector * v, const gsl_vector * origin, const double sph_radius)
+int sphere(const double v[3], const double origin[3], const double sph_radius)
 {
     /* Evaluates if a 3D point is inside a sphere positioned at an arbitrary origin.
     
@@ -44,14 +43,14 @@ int sphere(const gsl_vector * v, const gsl_vector * origin, const double sph_rad
     
     double d_eps = d_calc_epsilon();
     
-    double x = gsl_vector_get(v, 0);
-    double y = gsl_vector_get(v, 1);
-    double z = gsl_vector_get(v, 2);
+    double x = v[0];
+    double y = v[1];
+    double z = v[2];
     
-    double ox = gsl_vector_get(origin, 0);
-    double oy = gsl_vector_get(origin, 1);
-    double oz = gsl_vector_get(origin, 2);
-    
+    double ox = origin[0];
+    double oy = origin[1];
+    double oz = origin[2];
+
     /* In-plane distance squared of point away from origin */
     double d_dist_sq   = gsl_pow_2(x-ox)+gsl_pow_2(y-oy)+gsl_pow_2(z-oz);
     double d_radius_sq = gsl_pow_2(sph_radius);
