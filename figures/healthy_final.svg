@@ -10,9 +10,9 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="5cm"
-   height="5cm"
-   viewBox="0 0 177.16535 177.16535"
+   width="3.0000002cm"
+   height="3cm"
+   viewBox="0 0 106.29922 106.29921"
    id="svg4357"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -52,9 +52,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4182101"
-     inkscape:cx="171.37941"
-     inkscape:cy="106.51964"
+     inkscape:zoom="2.6994461"
+     inkscape:cx="89.568664"
+     inkscape:cy="89.833244"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -63,7 +63,11 @@
      inkscape:window-height="687"
      inkscape:window-x="0"
      inkscape:window-y="1"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <metadata
      id="metadata4362">
     <rdf:RDF>
@@ -80,16 +84,16 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-875.1969)">
+     transform="translate(1.9719747,-948.56416)">
     <rect
        style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;stroke-miterlimit:10;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect4952"
-       width="177.16533"
-       height="177.16533"
-       x="4.2314632e-06"
-       y="875.1969" />
+       width="105.12904"
+       height="105.12904"
+       x="-0.80181271"
+       y="948.25018" />
     <g
-       transform="matrix(0.30675838,0,0,0.30675838,-110.19514,851.55588)"
+       transform="matrix(0.18202892,0,0,0.18202892,-66.561516,934.59215)"
        style="font-style:normal;font-weight:normal;font-size:12px;font-family:Dialog;color-interpolation:auto;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto"
        id="g4326"
        clip-path="url(#clipPath4929)">
