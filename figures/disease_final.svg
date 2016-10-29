@@ -14,7 +14,10 @@
    id="svg5542"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="disease_final.svg">
+   sodipodi:docname="disease_final.svg"
+   inkscape:export-filename="/Users/mathieuboudreau/Work/Personal/lung_diffusion_sim/figures/disease.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300">
   <metadata
      id="metadata5561">
     <rdf:RDF>
@@ -23,7 +26,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -42,7 +45,7 @@
      showgrid="false"
      units="mm"
      inkscape:zoom="2.470618"
-     inkscape:cx="64.050518"
+     inkscape:cx="-6.3772049"
      inkscape:cy="23.207701"
      inkscape:window-x="0"
      inkscape:window-y="1"
@@ -77,6 +80,13 @@
            inkscape:connector-curvature="0" />
       </clipPath>
     </defs>
+    <rect
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;stroke-miterlimit:10;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect4717"
+       width="561.75"
+       height="561.75"
+       x="0"
+       y="187.25002" />
     <rect
        style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;stroke-miterlimit:10;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect5616"
