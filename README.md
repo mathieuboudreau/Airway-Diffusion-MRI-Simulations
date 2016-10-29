@@ -21,6 +21,12 @@ measurements between normal lungs and and emphysema.
 
 * Check unit testing framework
 
+## Model
+
+Budded cylinder model details.
+
+![Budded Cylinder (healthy)](/figures/healthy.png)
+
 ## About me
 
 **Mathieu Boudreau** is a PhD Candidate at McGill University in the Department of Biomedical Engineering.
