@@ -25,7 +25,10 @@ measurements between normal lungs and and emphysema.
 
 Budded cylinder model details.
 
-![Budded Cylinder (healthy)](/figures/healthy.png)
+Healthy                                             | Diseased
+:--------------------------------------------------:|:-----------------------------------------------------:
+![Budded Cylinder (healthy)](/figures/healthy.png)  |  ![Budded Cylinder (diseased)](/figures/disease.png)
+
 
 ## About me
 
