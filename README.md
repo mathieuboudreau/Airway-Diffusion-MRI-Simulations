@@ -13,6 +13,8 @@ measurements between normal lungs and and emphysema.
 
 * GNU Scientific Library (GSL)
 
+* HDF5
+
 * Check unit testing framework
 
 On a Mac with Brew installed, the following commands successfully installed all 
