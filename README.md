@@ -20,9 +20,7 @@ dependencies on my MacBook Pro (macOS Sierra Version 10.12.4):
 
 ```
 brew tap homebrew/science
-brew install gsl
-brew install hdf5
-brew install check
+brew install gsl hdf5 check
 ```
 
 Note that GCC and CMake were already installed on my machine (possibly through XCode & 
