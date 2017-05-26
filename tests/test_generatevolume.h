@@ -11,17 +11,17 @@
 
 START_TEST(test_that_allocvolume_returns_array_with_dimensions_that_match_func_arg)
 {
-    struct Volume * volume;
+    struct Volume volume;
 
-    volume->xdim = 10;
-    volume->ydim = 10;
-    volume->zdim = 10;
+    volume.xdim = 10;
+    volume.ydim = 10;
+    volume.zdim = 10;
 
-    allocvolume(volume);
+    allocvolume(&volume);
 
-    ck_assert(volume->array[9][9][9]==0);
+    ck_assert(volume.array[9][9][9]==0);
 
-    freevolume(volume);
+    freevolume(&volume);
 }
 END_TEST
 
