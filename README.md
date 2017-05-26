@@ -5,12 +5,6 @@ finite difference method.
 Switching between healthy and diseased airway values is intended to be used for investigating the behaviour of MRI
 measurements between normal lungs and and emphysema.
 
-# Installation
-
-* Generate make files: `cmake .`
-
-* Run make file: `make`
-
 ## Requirements
 
 * GCC
@@ -20,6 +14,30 @@ measurements between normal lungs and and emphysema.
 * GNU Scientific Library (GSL)
 
 * Check unit testing framework
+
+On a Mac with Brew installed, the following commands successfully installed all 
+dependencies on my MacBook Pro (macOS Sierra Version 10.12.4):
+
+```
+brew tap homebrew/science
+brew install gsl
+brew install hdf5
+brew install check
+```
+
+Note that GCC and CMake were already installed on my machine (possibly through XCode & 
+XCode Command Line Tools which are installed seperately).
+
+# Installation
+
+* Generate make files: `cmake .`
+
+* Run make file: `make`
+
+## Tests
+
+From the command line and the repo directory, run `./bin/unit_tests ` to ensure that the 
+code was installed successfully (all tests should pass).
 
 ## Model
 
