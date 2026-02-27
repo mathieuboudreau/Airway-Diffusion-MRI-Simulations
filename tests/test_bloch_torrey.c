@@ -17,8 +17,7 @@ Suite *bloch_torrey_suite(void)
     tcase_add_test(tc_core, test_alloc_2d_complexf_returns_zeroed_array);
 
     /* Solver integration */
-    tcase_set_timeout(tc_core, 300);  /* simulation can take a while */
-    tcase_add_test(tc_core, test_bloch_torrey_produces_nonzero_signal_for_healthy_geometry);
+    tcase_add_test(tc_core, test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube);
 
     suite_add_tcase(s, tc_core);
 
