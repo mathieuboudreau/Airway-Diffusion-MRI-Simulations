@@ -180,6 +180,95 @@ START_TEST(test_bloch_torrey_signal_constant_without_gradient)
 }
 END_TEST
 
+/* ---- Stejskal-Tanner free-diffusion echo -------------------------------- */
+/*
+ * For free diffusion (no restrictions) with a bipolar square gradient along
+ * z only (angle = 0, risetime = 0), the Stejskal-Tanner equation predicts
+ * the signal magnitude at the echo time exactly:
+ *
+ *   |S(Nt)| / S(0)  =  exp(-b · D)
+ *
+ * where, for a bipolar square waveform with effective lobe duration Δ_eff:
+ *
+ *   b = (2/3) · γ² · G² · Δ_eff³
+ *
+ * The z-direction uses periodic BC, which realises free diffusion with no
+ * boundary reflections.  The gradient acts only in z (Gxamp = G·sin(0) = 0),
+ * so x/y diffusion contributes zero dephasing.
+ *
+ * Uses the same tiny 12×12×12 cube so the test runs in < 1 s.
+ * Tolerance: 5 % to absorb operator-splitting and discrete-time errors.
+ */
+START_TEST(test_bloch_torrey_free_diffusion_echo_matches_stejskal_tanner)
+{
+    struct Volume volume;
+    volume.xdim = 12;
+    volume.ydim = 12;
+    volume.zdim = 12;
+    allocvolume(&volume);
+
+    for (int ii = 1; ii <= 10; ii++)
+        for (int jj = 1; jj <= 10; jj++)
+            for (int kk = 1; kk <= 10; kk++)
+                volume.array[ii][jj][kk] = 1;
+
+    const int N_gas = 1000;   /* 10×10×10 interior voxels; S(0) is known */
+
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+    simParams.risetime   = 0.0;   /* square bipolar → clean b-value formula */
+    simParams.Gamp       = 5e-3;  /* moderate attenuation: exp(-b·D) ≈ 0.58 */
+
+    /* Analytic prediction:
+     *   dt       = 0.2 · dz² / D           (stability-limited timestep)
+     *   Δ_eff    = floor(Δ/dt) · dt         (actual lobe duration in sim)
+     *   b        = (2/3) · γ² · G² · Δ_eff³
+     *   expected = exp(-b · D)                                             */
+    double dt         = 0.2 * geom.dz * geom.dz / simParams.DHe;
+    int    time_steps = (int)(simParams.bigdelta / dt);
+    double delta_eff  = (double)time_steps * dt;
+    double b          = (2.0 / 3.0)
+                      * simParams.gamma * simParams.gamma
+                      * simParams.Gamp  * simParams.Gamp
+                      * delta_eff * delta_eff * delta_eff;
+    double expected   = exp(-b * simParams.DHe);
+
+    FILE *fp = tmpfile();
+    ck_assert_ptr_nonnull(fp);
+
+    run_bloch_torrey(&volume, &geom, &simParams,
+                     /*angle=*/0.0, /*angle_idx=*/1, fp);
+    freevolume(&volume);
+
+    /* Read echo signal at t = Nt = 2 · time_steps */
+    int   Nt     = 2 * time_steps;
+    float sig_Nt = 0.0f;
+    rewind(fp);
+    char  line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        int   ai, t;
+        float a, r, ab;
+        if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5
+                && t == Nt)
+            sig_Nt = ab;
+    }
+    fclose(fp);
+
+    double sim_ratio = (double)sig_Nt / N_gas;
+    double rel_err   = fabs(sim_ratio - expected) / expected;
+
+    ck_assert_msg(rel_err < 0.05,
+                  "Stejskal-Tanner free diffusion: simulated=%.6f, "
+                  "expected=%.6f, relative error=%.2f%% (max 5%%)",
+                  sim_ratio, expected, 100.0 * rel_err);
+}
+END_TEST
+
 /* ---- 2011 reference regression ---------------------------------------- */
 /*
  * Runs the simulation with the exact 2011 parameters (bigdelta=5 ms,

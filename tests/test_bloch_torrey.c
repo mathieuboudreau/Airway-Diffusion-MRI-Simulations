@@ -20,6 +20,7 @@ Suite *bloch_torrey_suite(void)
     /* Solver integration */
     tcase_add_test(tc_core, test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube);
     tcase_add_test(tc_core, test_bloch_torrey_signal_constant_without_gradient);
+    tcase_add_test(tc_core, test_bloch_torrey_free_diffusion_echo_matches_stejskal_tanner);
 
     suite_add_tcase(s, tc_core);
 
