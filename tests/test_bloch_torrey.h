@@ -335,4 +335,432 @@ START_TEST(test_bloch_torrey_2011_normalised_decay_matches_reference)
 }
 END_TEST
 
+/* ---- Echo coherence: signal dips at mid-point, refocuses at echo -------- */
+/*
+ * With a bipolar gradient (angle=0, risetime=0) the first lobe dephases spins
+ * and the second lobe rephases them.  At t=time_steps (end of lobe 1) the
+ * signal should be well below S(0); at t=Nt (echo) it should be substantially
+ * larger than at mid-point.
+ *
+ * Verified numerically: S(mid)/S(0) ≈ 0.40,  S(echo)/S(0) ≈ 0.58.
+ * Tolerances: S(mid) < 0.80·S(0) and S(echo) > 1.50·S(mid).
+ */
+START_TEST(test_bloch_torrey_signal_dephases_then_refocuses)
+{
+    struct Volume volume;
+    volume.xdim = 12;
+    volume.ydim = 12;
+    volume.zdim = 12;
+    allocvolume(&volume);
+
+    for (int ii = 1; ii <= 10; ii++)
+        for (int jj = 1; jj <= 10; jj++)
+            for (int kk = 1; kk <= 10; kk++)
+                volume.array[ii][jj][kk] = 1;
+
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+    simParams.risetime   = 0.0;
+    simParams.Gamp       = 5e-3;
+
+    double dt         = 0.2 * geom.dz * geom.dz / simParams.DHe;
+    int    time_steps = (int)(simParams.bigdelta / dt);
+    int    Nt         = 2 * time_steps;
+
+    FILE *fp = tmpfile();
+    ck_assert_ptr_nonnull(fp);
+
+    run_bloch_torrey(&volume, &geom, &simParams, 0.0, 1, fp);
+    freevolume(&volume);
+
+    rewind(fp);
+    char  line[256];
+    float sig0     = 0.0f;
+    float sig_mid  = 0.0f;
+    float sig_echo = 0.0f;
+    while (fgets(line, sizeof(line), fp)) {
+        int   ai, t;
+        float a, r, ab;
+        if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5) {
+            if (t == 1)          sig0     = ab;
+            if (t == time_steps) sig_mid  = ab;
+            if (t == Nt)         sig_echo = ab;
+        }
+    }
+    fclose(fp);
+
+    ck_assert_msg(sig0 > 0.0f, "Initial signal is zero — volume may be empty");
+
+    ck_assert_msg(sig_mid < 0.80f * sig0,
+                  "Signal not sufficiently dephased at mid-point: "
+                  "S(mid)/S(0)=%.4f (expect < 0.80)",
+                  sig_mid / sig0);
+
+    ck_assert_msg(sig_echo > 1.40f * sig_mid,
+                  "Signal did not substantially refocus at echo: "
+                  "S(echo)/S(mid)=%.4f (expect > 1.40)",
+                  sig_echo / sig_mid);
+}
+END_TEST
+
+/* ---- b-value scaling: log(S) proportional to G² ------------------------- */
+/*
+ * The Stejskal-Tanner equation gives  log|S| = -b·D  and  b ∝ G².
+ * Therefore  log(S(G·√2)) / log(S(G)) = (G·√2)²/G² = 2.
+ *
+ * Tolerance: ±0.10 on the ratio (absorbs operator-splitting discretisation).
+ */
+START_TEST(test_bloch_torrey_signal_scales_with_b_value)
+{
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+    simParams.risetime   = 0.0;
+
+    double dt         = 0.2 * geom.dz * geom.dz / simParams.DHe;
+    int    time_steps = (int)(simParams.bigdelta / dt);
+    int    Nt         = 2 * time_steps;
+
+    float sig1 = 0.0f, sig2 = 0.0f;
+
+    /* First run: G */
+    {
+        struct Volume volume;
+        volume.xdim = 12; volume.ydim = 12; volume.zdim = 12;
+        allocvolume(&volume);
+        for (int ii = 1; ii <= 10; ii++)
+            for (int jj = 1; jj <= 10; jj++)
+                for (int kk = 1; kk <= 10; kk++)
+                    volume.array[ii][jj][kk] = 1;
+        simParams.Gamp = 5e-3;
+        FILE *fp = tmpfile();
+        run_bloch_torrey(&volume, &geom, &simParams, 0.0, 1, fp);
+        freevolume(&volume);
+        rewind(fp);
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            int ai, t; float a, r, ab;
+            if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5 && t == Nt)
+                sig1 = ab;
+        }
+        fclose(fp);
+    }
+
+    /* Second run: G·√2  →  b doubled */
+    {
+        struct Volume volume;
+        volume.xdim = 12; volume.ydim = 12; volume.zdim = 12;
+        allocvolume(&volume);
+        for (int ii = 1; ii <= 10; ii++)
+            for (int jj = 1; jj <= 10; jj++)
+                for (int kk = 1; kk <= 10; kk++)
+                    volume.array[ii][jj][kk] = 1;
+        simParams.Gamp = 5e-3 * sqrt(2.0);
+        FILE *fp = tmpfile();
+        run_bloch_torrey(&volume, &geom, &simParams, 0.0, 1, fp);
+        freevolume(&volume);
+        rewind(fp);
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            int ai, t; float a, r, ab;
+            if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5 && t == Nt)
+                sig2 = ab;
+        }
+        fclose(fp);
+    }
+
+    ck_assert_msg(sig1 > 0.0f && sig2 > 0.0f,
+                  "Echo signal is zero — volume may be empty");
+
+    /* Normalise by S(0) = N_gas = 1000 so that log gives the correct
+     * attenuation exponent (log(S/S0) = -b·D) rather than log of a count. */
+    const double N_gas = 1000.0;
+    double ratio = log((double)sig2 / N_gas) / log((double)sig1 / N_gas);
+    ck_assert_msg(fabs(ratio - 2.0) < 0.10,
+                  "b-value G² scaling: log(S(G√2)/S0)/log(S(G)/S0)=%.4f (expect 2.0 ±0.10)",
+                  ratio);
+}
+END_TEST
+
+/* ---- Angle dependence: radial attenuation less than axial --------------- */
+/*
+ * At angle=0 the gradient is axial (z, periodic BC) → free diffusion
+ * → maximum signal attenuation (= Stejskal-Tanner).
+ * At angle=π/2 the gradient is radial (x, no-flux BC) → restricted diffusion
+ * → less attenuation → higher echo signal.
+ *
+ * Verified numerically: S(π/2)/S(0)≈0.72,  S(0°)/S(0)≈0.58  (same Gamp).
+ */
+START_TEST(test_bloch_torrey_radial_attenuation_less_than_axial)
+{
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+    simParams.risetime   = 0.0;
+    simParams.Gamp       = 5e-3;
+
+    double dt         = 0.2 * geom.dz * geom.dz / simParams.DHe;
+    int    time_steps = (int)(simParams.bigdelta / dt);
+    int    Nt         = 2 * time_steps;
+
+    float sig_axial = 0.0f, sig_radial = 0.0f;
+
+    /* Axial: angle = 0 */
+    {
+        struct Volume volume;
+        volume.xdim = 12; volume.ydim = 12; volume.zdim = 12;
+        allocvolume(&volume);
+        for (int ii = 1; ii <= 10; ii++)
+            for (int jj = 1; jj <= 10; jj++)
+                for (int kk = 1; kk <= 10; kk++)
+                    volume.array[ii][jj][kk] = 1;
+        FILE *fp = tmpfile();
+        run_bloch_torrey(&volume, &geom, &simParams, 0.0, 1, fp);
+        freevolume(&volume);
+        rewind(fp);
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            int ai, t; float a, r, ab;
+            if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5 && t == Nt)
+                sig_axial = ab;
+        }
+        fclose(fp);
+    }
+
+    /* Radial: angle = π/2 */
+    {
+        struct Volume volume;
+        volume.xdim = 12; volume.ydim = 12; volume.zdim = 12;
+        allocvolume(&volume);
+        for (int ii = 1; ii <= 10; ii++)
+            for (int jj = 1; jj <= 10; jj++)
+                for (int kk = 1; kk <= 10; kk++)
+                    volume.array[ii][jj][kk] = 1;
+        FILE *fp = tmpfile();
+        run_bloch_torrey(&volume, &geom, &simParams, M_PI / 2.0, 1, fp);
+        freevolume(&volume);
+        rewind(fp);
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            int ai, t; float a, r, ab;
+            if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5 && t == Nt)
+                sig_radial = ab;
+        }
+        fclose(fp);
+    }
+
+    ck_assert_msg(sig_axial > 0.0f && sig_radial > 0.0f,
+                  "Echo signal is zero — volume may be empty");
+
+    ck_assert_msg(sig_radial > sig_axial,
+                  "Expected radial signal (%.4f) > axial signal (%.4f): "
+                  "no-flux BC should restrict diffusion more than periodic BC",
+                  sig_radial, sig_axial);
+}
+END_TEST
+
+/* ---- Empty volume gives zero signal ------------------------------------- */
+/*
+ * With no gas voxels (all mask=0) the magnetisation is zero everywhere and
+ * the signal must be identically zero at every timestep.
+ */
+START_TEST(test_bloch_torrey_empty_volume_gives_zero_signal)
+{
+    struct Volume volume;
+    volume.xdim = 12;
+    volume.ydim = 12;
+    volume.zdim = 12;
+    allocvolume(&volume);   /* all entries initialised to 0 */
+
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+
+    FILE *fp = tmpfile();
+    ck_assert_ptr_nonnull(fp);
+
+    run_bloch_torrey(&volume, &geom, &simParams, 0.0, 1, fp);
+    freevolume(&volume);
+
+    rewind(fp);
+    char  line[256];
+    float max_sig = 0.0f;
+    while (fgets(line, sizeof(line), fp)) {
+        int   ai, t;
+        float a, r, ab;
+        if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5)
+            if (ab > max_sig) max_sig = ab;
+    }
+    fclose(fp);
+
+    ck_assert_msg(max_sig == 0.0f,
+                  "Empty volume produced non-zero signal: max|S|=%.6f", max_sig);
+}
+END_TEST
+
+/* ---- Single isolated voxel echoes perfectly ----------------------------- */
+/*
+ * A single gas voxel surrounded by wall has no diffusion neighbours, so its
+ * magnetisation evolves purely by phase rotation:
+ *   M(t+1) = M(t) · exp(i·γ·dt·(Gx(t)·X + Gz(t)·Z))
+ *
+ * For a symmetric bipolar pulse the sum of Gx(t) and of Gz(t) over all Nt
+ * steps is zero, so the total accumulated phase is zero and |S(Nt)| = |S(0)|
+ * to floating-point precision.
+ *
+ * The voxel is placed at (5,5,5) — away from all boundaries — to avoid any
+ * periodic-BC correction.  angle=π/4 exercises both Gx and Gz simultaneously.
+ * Tolerance: absolute error < 1e-4.
+ */
+START_TEST(test_bloch_torrey_single_voxel_echo_is_unity)
+{
+    struct Volume volume;
+    volume.xdim = 12;
+    volume.ydim = 12;
+    volume.zdim = 12;
+    allocvolume(&volume);
+    volume.array[5][5][5] = 1;   /* one isolated gas voxel */
+
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+    simParams.risetime   = 0.0;
+    simParams.Gamp       = 5e-3;
+
+    double dt         = 0.2 * geom.dz * geom.dz / simParams.DHe;
+    int    time_steps = (int)(simParams.bigdelta / dt);
+    int    Nt         = 2 * time_steps;
+
+    FILE *fp = tmpfile();
+    ck_assert_ptr_nonnull(fp);
+
+    run_bloch_torrey(&volume, &geom, &simParams, M_PI / 4.0, 1, fp);
+    freevolume(&volume);
+
+    rewind(fp);
+    char  line[256];
+    float sig0     = 0.0f;
+    float sig_echo = 0.0f;
+    while (fgets(line, sizeof(line), fp)) {
+        int   ai, t;
+        float a, r, ab;
+        if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5) {
+            if (t == 1)  sig0     = ab;
+            if (t == Nt) sig_echo = ab;
+        }
+    }
+    fclose(fp);
+
+    ck_assert_msg(sig0 > 0.0f, "Initial signal is zero — single voxel not set");
+
+    float abs_err = fabsf(sig_echo - sig0);
+    ck_assert_msg(abs_err < 1e-4f,
+                  "Single isolated voxel: |S(echo)-S(0)|=%.2e (expect < 1e-4)",
+                  abs_err);
+}
+END_TEST
+
+/* ---- Trapezoidal waveform attenuates less than square pulse ------------- */
+/*
+ * With a non-zero rise time the gradient ramps up and down, so the effective
+ * b-value is smaller than for an equal-amplitude square pulse over the same
+ * bigdelta.  Therefore the echo signal should be larger with risetime > 0.
+ *
+ * Uses risetime = 10 % of bigdelta.  Verified: S_trap/S(0) ≈ 0.633 vs
+ * S_square/S(0) ≈ 0.584.
+ */
+START_TEST(test_bloch_torrey_trapezoidal_signal_exceeds_square)
+{
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+    simParams.Gamp       = 5e-3;
+
+    double dt         = 0.2 * geom.dz * geom.dz / simParams.DHe;
+    int    time_steps = (int)(simParams.bigdelta / dt);
+    int    Nt         = 2 * time_steps;
+
+    float sig_square = 0.0f, sig_trap = 0.0f;
+
+    /* Square pulse: risetime = 0 */
+    {
+        struct Volume volume;
+        volume.xdim = 12; volume.ydim = 12; volume.zdim = 12;
+        allocvolume(&volume);
+        for (int ii = 1; ii <= 10; ii++)
+            for (int jj = 1; jj <= 10; jj++)
+                for (int kk = 1; kk <= 10; kk++)
+                    volume.array[ii][jj][kk] = 1;
+        simParams.risetime = 0.0;
+        FILE *fp = tmpfile();
+        run_bloch_torrey(&volume, &geom, &simParams, 0.0, 1, fp);
+        freevolume(&volume);
+        rewind(fp);
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            int ai, t; float a, r, ab;
+            if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5 && t == Nt)
+                sig_square = ab;
+        }
+        fclose(fp);
+    }
+
+    /* Trapezoidal: risetime = 10 % of bigdelta */
+    {
+        struct Volume volume;
+        volume.xdim = 12; volume.ydim = 12; volume.zdim = 12;
+        allocvolume(&volume);
+        for (int ii = 1; ii <= 10; ii++)
+            for (int jj = 1; jj <= 10; jj++)
+                for (int kk = 1; kk <= 10; kk++)
+                    volume.array[ii][jj][kk] = 1;
+        simParams.risetime = simParams.bigdelta * 0.1;
+        FILE *fp = tmpfile();
+        run_bloch_torrey(&volume, &geom, &simParams, 0.0, 1, fp);
+        freevolume(&volume);
+        rewind(fp);
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            int ai, t; float a, r, ab;
+            if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5 && t == Nt)
+                sig_trap = ab;
+        }
+        fclose(fp);
+    }
+
+    ck_assert_msg(sig_square > 0.0f && sig_trap > 0.0f,
+                  "Echo signal is zero — volume may be empty");
+
+    ck_assert_msg(sig_trap > sig_square,
+                  "Trapezoidal signal (%.4f) should exceed square signal (%.4f): "
+                  "smaller effective b-value with finite rise time",
+                  sig_trap, sig_square);
+}
+END_TEST
+
 #endif

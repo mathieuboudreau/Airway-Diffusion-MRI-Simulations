@@ -21,6 +21,12 @@ Suite *bloch_torrey_suite(void)
     tcase_add_test(tc_core, test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube);
     tcase_add_test(tc_core, test_bloch_torrey_signal_constant_without_gradient);
     tcase_add_test(tc_core, test_bloch_torrey_free_diffusion_echo_matches_stejskal_tanner);
+    tcase_add_test(tc_core, test_bloch_torrey_signal_dephases_then_refocuses);
+    tcase_add_test(tc_core, test_bloch_torrey_signal_scales_with_b_value);
+    tcase_add_test(tc_core, test_bloch_torrey_radial_attenuation_less_than_axial);
+    tcase_add_test(tc_core, test_bloch_torrey_empty_volume_gives_zero_signal);
+    tcase_add_test(tc_core, test_bloch_torrey_single_voxel_echo_is_unity);
+    tcase_add_test(tc_core, test_bloch_torrey_trapezoidal_signal_exceeds_square);
 
     suite_add_tcase(s, tc_core);
 
