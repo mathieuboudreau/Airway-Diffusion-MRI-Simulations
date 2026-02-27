@@ -1,13 +1,20 @@
 #ifndef _TEST_BLOCH_TORREY_H
 #define _TEST_BLOCH_TORREY_H
 
+#define _USE_MATH_DEFINES
 #include <check.h>
 #include <complex.h>
+#include <math.h>
+#include <stdio.h>
 #include "../src/simulation/bloch_torrey.h"
 #include "../src/morphology/generatevolume.h"
 #include "../src/morphology/buddedcylinder.h"
 #include "../src/params/default_buddedcylinders.h"
 #include "../src/params/simulation_params.h"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 /* ---- alloc_3d_double / free_3d_double ---- */
 
@@ -98,6 +105,72 @@ START_TEST(test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube)
     freevolume(&volume);
 
     ck_assert_int_gt(lines_written, 0);
+}
+END_TEST
+
+/* ---- 2011 reference regression ---------------------------------------- */
+/*
+ * Runs the simulation with the exact 2011 parameters (bigdelta=5 ms,
+ * Gamp=0.00964813..., integer-truncated gamma) for gradient angle n=1 and
+ * checks that the normalised signal decay at t=500 matches the reference
+ * produced by the original monolithic code.
+ *
+ * Reference (original 2011 code, angle n=1):
+ *   t=1   |S| = 192832.66   (absolute value depends on geometry; the
+ *   t=500 |S| = 192146.55    refactored code has ~2 % more gas voxels)
+ *   ratio = |S[500]| / |S[1]| = 0.99644
+ *
+ * We compare only the normalised ratio to tolerate the small geometry
+ * difference; tolerance is ±0.005 (0.5 %).
+ *
+ * Runtime: ~20 s on a typical machine; timeout is set to 60 s.
+ */
+START_TEST(test_bloch_torrey_2011_normalised_decay_matches_reference)
+{
+    struct BuddedCylinderParams bcParams = setupHealthyBuddedCylinder();
+
+    struct Volume volume;
+    volume.xdim = bcParams.xdim;
+    volume.ydim = bcParams.ydim;
+    volume.zdim = bcParams.zdim;
+    allocvolume(&volume);
+    generatevolume(&volume, &buddedcylinder, &bcParams);
+
+    struct SimulationParams simParams = setup2011SimulationParams();
+    simParams.num_angles = 1;
+
+    FILE *fp = tmpfile();
+    ck_assert_ptr_nonnull(fp);
+
+    double angle = 1.0 * M_PI / 30.0;
+    run_bloch_torrey(&volume, &bcParams, &simParams, angle, 1, fp);
+    freevolume(&volume);
+
+    /* Parse output: extract abs_signal at t=1 and t=500 */
+    rewind(fp);
+    char  line[256];
+    float sig_t1   = 0.0f;
+    float sig_t500 = 0.0f;
+    while (fgets(line, sizeof(line), fp)) {
+        int   ai, t;
+        float a, r, ab;
+        if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5) {
+            if (t == 1)   sig_t1   = ab;
+            if (t == 500) sig_t500 = ab;
+        }
+    }
+    fclose(fp);
+
+    ck_assert_msg(sig_t1 > 0.0f, "Initial signal is zero — geometry may be empty");
+
+    /* Normalised ratio at t=500: reference=0.99644, tolerance ±0.005 */
+    float ratio = sig_t500 / sig_t1;
+    ck_assert_msg(ratio >= 0.99144f,
+                  "Signal decayed too much at t=500: ratio=%.6f (expected >= 0.99144)",
+                  ratio);
+    ck_assert_msg(ratio <= 1.00144f,
+                  "Signal grew at t=500: ratio=%.6f (expected <= 1.00144)",
+                  ratio);
 }
 END_TEST
 

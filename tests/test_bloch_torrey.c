@@ -5,6 +5,7 @@ Suite *bloch_torrey_suite(void)
 {
     Suite *s;
     TCase *tc_core;
+    TCase *tc_slow;
 
     s = suite_create("bloch_torrey.h test");
 
@@ -20,6 +21,12 @@ Suite *bloch_torrey_suite(void)
     tcase_add_test(tc_core, test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube);
 
     suite_add_tcase(s, tc_core);
+
+    /* Regression tests (slow: use full-resolution geometry, ~20 s each) */
+    tc_slow = tcase_create("Slow");
+    tcase_set_timeout(tc_slow, 60);
+    tcase_add_test(tc_slow, test_bloch_torrey_2011_normalised_decay_matches_reference);
+    suite_add_tcase(s, tc_slow);
 
     return s;
 }

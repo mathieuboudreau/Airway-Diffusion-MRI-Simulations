@@ -213,57 +213,68 @@ void run_bloch_torrey(const struct Volume               *vol,
                 for (int kk = k_start; kk <= k_end; kk++)
                     M1[ii][jj][kk] = M2[ii][jj][kk] * phasechange[ii][kk];
 
-        /* -- Operator-split diffusion step: y → z (periodic) → x -- */
-        float complex Signal = 0.0f + 0.0f * I;
+        /* -- Operator-split diffusion step: y → z (periodic) → x --
+         *
+         * Each direction is a SEPARATE complete loop over all voxels so that
+         * each 1-D sub-step reads from the output of the previous sub-step.
+         * Combining all three in one loop is equivalent to 3-D explicit Euler
+         * (stability: 6·D·dt/dx² < 1) which is violated by dt = 0.2·dx²/D.
+         * With separate loops each sub-step satisfies its own 1-D condition
+         * (2·D·dt/dx² = 0.4 < 1).                                          */
 
-        for (int ii = 1; ii < xdim - 1; ii++) {
-            for (int jj = 1; jj < ydim - 1; jj++) {
-                for (int kk = k_start; kk <= k_end; kk++) {
-
-                    /* Step 1: y-direction (radial, natural zero-flux BC at walls) */
+        /* Sub-step 1: y-direction → write to Mp, read from M1 */
+        for (int ii = 1; ii < xdim - 1; ii++)
+            for (int jj = 1; jj < ydim - 1; jj++)
+                for (int kk = k_start; kk <= k_end; kk++)
                     Mp[ii][jj][kk] = M1[ii][jj][kk]
                         + (float)kyd * (
                             (float)Ddist[ii][jj-1][kk] * (M1[ii][jj-1][kk] - M1[ii][jj][kk])
                           + (float)Ddist[ii][jj+1][kk] * (M1[ii][jj+1][kk] - M1[ii][jj][kk]));
 
-                    /* Step 2: z-direction (axial, periodic BC) */
+        /* Sub-step 2: z-direction (periodic BC) → write to M2, read from Mp */
+        for (int ii = 1; ii < xdim - 1; ii++) {
+            for (int jj = 1; jj < ydim - 1; jj++) {
+                for (int kk = k_start; kk <= k_end; kk++) {
                     float complex left_nb, right_nb;
 
                     if (kk == k_start) {
-                        /* Left neighbour wraps to k_end with phase correction */
                         float phase_corr_l = (float)(GBZ * (Z[k_start] - Z[k_end + 1]));
                         left_nb  = (float)Ddist[ii][jj][k_end]
-                                 * (M1[ii][jj][k_end] * cexpf(igammadt * phase_corr_l)
-                                    - M1[ii][jj][kk]);
+                                 * (Mp[ii][jj][k_end] * cexpf(igammadt * phase_corr_l)
+                                    - Mp[ii][jj][kk]);
                         right_nb = (float)Ddist[ii][jj][kk+1]
-                                 * (M1[ii][jj][kk+1] - M1[ii][jj][kk]);
+                                 * (Mp[ii][jj][kk+1] - Mp[ii][jj][kk]);
                     } else if (kk == k_end) {
-                        /* Right neighbour wraps to k_start with phase correction */
                         left_nb  = (float)Ddist[ii][jj][kk-1]
-                                 * (M1[ii][jj][kk-1] - M1[ii][jj][kk]);
+                                 * (Mp[ii][jj][kk-1] - Mp[ii][jj][kk]);
                         float phase_corr_r = (float)(GBZ * (Z[k_end] - Z[k_start - 1]));
                         right_nb = (float)Ddist[ii][jj][k_start]
-                                 * (M1[ii][jj][k_start] * cexpf(igammadt * phase_corr_r)
-                                    - M1[ii][jj][kk]);
+                                 * (Mp[ii][jj][k_start] * cexpf(igammadt * phase_corr_r)
+                                    - Mp[ii][jj][kk]);
                     } else {
                         left_nb  = (float)Ddist[ii][jj][kk-1]
-                                 * (M1[ii][jj][kk-1] - M1[ii][jj][kk]);
+                                 * (Mp[ii][jj][kk-1] - Mp[ii][jj][kk]);
                         right_nb = (float)Ddist[ii][jj][kk+1]
-                                 * (M1[ii][jj][kk+1] - M1[ii][jj][kk]);
+                                 * (Mp[ii][jj][kk+1] - Mp[ii][jj][kk]);
                     }
 
-                    M2[ii][jj][kk] = Mp[ii][jj][kk]
-                        + (float)kzd * (left_nb + right_nb);
+                    M2[ii][jj][kk] = Mp[ii][jj][kk] + (float)kzd * (left_nb + right_nb);
+                }
+            }
+        }
 
-                    /* Step 3: x-direction (radial, natural zero-flux BC at walls) */
+        /* Sub-step 3: x-direction → write to Mp, read from M2; then mask */
+        float complex Signal = 0.0f + 0.0f * I;
+
+        for (int ii = 1; ii < xdim - 1; ii++) {
+            for (int jj = 1; jj < ydim - 1; jj++) {
+                for (int kk = k_start; kk <= k_end; kk++) {
                     Mp[ii][jj][kk] = M2[ii][jj][kk]
                         + (float)kxd * (
-                            (float)Ddist[ii-1][jj][kk] * (M1[ii-1][jj][kk] - M1[ii][jj][kk])
-                          + (float)Ddist[ii+1][jj][kk] * (M1[ii+1][jj][kk] - M1[ii][jj][kk]));
+                            (float)Ddist[ii-1][jj][kk] * (M2[ii-1][jj][kk] - M2[ii][jj][kk])
+                          + (float)Ddist[ii+1][jj][kk] * (M2[ii+1][jj][kk] - M2[ii][jj][kk]));
 
-                    /* Apply geometry mask (gas stays inside airway) */
                     M2[ii][jj][kk] = Mp[ii][jj][kk] * (float)vol->array[ii][jj][kk];
-
                     Signal += M2[ii][jj][kk];
                 }
             }
