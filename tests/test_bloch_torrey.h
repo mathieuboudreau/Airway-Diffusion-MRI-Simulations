@@ -49,31 +49,45 @@ START_TEST(test_alloc_2d_complexf_returns_zeroed_array)
 }
 END_TEST
 
-/* ---- run_bloch_torrey: signal is non-zero for a valid volume ---- */
-
-START_TEST(test_bloch_torrey_produces_nonzero_signal_for_healthy_geometry)
+/* ---- run_bloch_torrey: signal is non-zero for a small isotropic cube ---- */
+/*
+ * Uses a tiny 12×12×12 volume with 100 µm voxel spacing so that the
+ * stability-limited timestep  dt = 0.2·dz²/DHe ≈ 328 µs  gives only
+ * ~60 total timesteps over the full diffusion interval.  The inner loop
+ * runs on 10×10×10 = 1000 voxels → ~60 k iterations total, completing
+ * in milliseconds without a per-test timeout override.
+ */
+START_TEST(test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube)
 {
-    struct BuddedCylinderParams bcParams = setupHealthyBuddedCylinder();
-
+    /* Tiny synthetic geometry: 12×12×12, all interior voxels = 1 (gas) */
     struct Volume volume;
-    volume.xdim = bcParams.xdim;
-    volume.ydim = bcParams.ydim;
-    volume.zdim = bcParams.zdim;
-
+    volume.xdim = 12;
+    volume.ydim = 12;
+    volume.zdim = 12;
     allocvolume(&volume);
-    generatevolume(&volume, &buddedcylinder, &bcParams);
+
+    for (int ii = 1; ii <= 10; ii++)
+        for (int jj = 1; jj <= 10; jj++)
+            for (int kk = 1; kk <= 10; kk++)
+                volume.array[ii][jj][kk] = 1;
+
+    /* Minimal geometry params: only dx/dy/dz are used by the solver.
+     * 100 µm voxel spacing → large dt → very few timesteps. */
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
 
     struct SimulationParams simParams = setupDefaultSimulationParams();
-    /* Run only 1 angle to keep the test fast */
     simParams.num_angles = 1;
 
     FILE *fp = tmpfile();
     ck_assert_ptr_nonnull(fp);
 
-    run_bloch_torrey(&volume, &bcParams, &simParams,
+    run_bloch_torrey(&volume, &geom, &simParams,
                      /*angle=*/1.5707963 /*pi/2*/, /*angle_idx=*/1, fp);
 
-    /* Check that at least one data line was written */
+    /* Verify that data lines were written */
     rewind(fp);
     char line[256];
     int  lines_written = 0;
