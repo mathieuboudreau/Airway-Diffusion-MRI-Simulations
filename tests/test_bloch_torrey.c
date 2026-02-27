@@ -19,6 +19,7 @@ Suite *bloch_torrey_suite(void)
 
     /* Solver integration */
     tcase_add_test(tc_core, test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube);
+    tcase_add_test(tc_core, test_bloch_torrey_signal_constant_without_gradient);
 
     suite_add_tcase(s, tc_core);
 

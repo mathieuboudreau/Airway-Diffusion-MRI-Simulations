@@ -108,6 +108,78 @@ START_TEST(test_bloch_torrey_produces_nonzero_signal_for_isotropic_cube)
 }
 END_TEST
 
+/* ---- Zero-gradient invariant ------------------------------------------ */
+/*
+ * With Gamp = 0 there is no phase accumulation.  In a uniform gas-filled
+ * volume the diffusion operator satisfies a no-flux (Neumann) boundary
+ * condition in x and y (Ddist = 0 at mask boundaries) and a plain periodic
+ * condition in z (GBZ stays 0, so the phase correction factor is e^0 = 1).
+ * Total magnetisation is therefore conserved and the signal magnitude must
+ * remain constant to within floating-point rounding.
+ *
+ * Uses the same tiny 12×12×12 cube as the smoke test so it runs in < 1 s.
+ */
+START_TEST(test_bloch_torrey_signal_constant_without_gradient)
+{
+    struct Volume volume;
+    volume.xdim = 12;
+    volume.ydim = 12;
+    volume.zdim = 12;
+    allocvolume(&volume);
+
+    for (int ii = 1; ii <= 10; ii++)
+        for (int jj = 1; jj <= 10; jj++)
+            for (int kk = 1; kk <= 10; kk++)
+                volume.array[ii][jj][kk] = 1;
+
+    struct BuddedCylinderParams geom = {0};
+    geom.dx = 100e-6;
+    geom.dy = 100e-6;
+    geom.dz = 100e-6;
+
+    struct SimulationParams simParams = setupDefaultSimulationParams();
+    simParams.num_angles = 1;
+    simParams.Gamp = 0.0;   /* no gradient → no dephasing */
+
+    FILE *fp = tmpfile();
+    ck_assert_ptr_nonnull(fp);
+
+    run_bloch_torrey(&volume, &geom, &simParams,
+                     /*angle=*/0.0, /*angle_idx=*/1, fp);
+    freevolume(&volume);
+
+    rewind(fp);
+    char  line[256];
+    float sig0    = 0.0f;
+    float sig_min = 1e38f;
+    float sig_max = 0.0f;
+    int   n       = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        int   ai, t;
+        float a, r, ab;
+        if (sscanf(line, "%d, %f, %d, %f, %f", &ai, &a, &t, &r, &ab) == 5) {
+            if (t == 1) sig0 = ab;
+            if (ab < sig_min) sig_min = ab;
+            if (ab > sig_max) sig_max = ab;
+            n++;
+        }
+    }
+    fclose(fp);
+
+    ck_assert_msg(n > 0,       "No output lines written");
+    ck_assert_msg(sig0 > 0.0f, "Initial signal is zero — volume may be empty");
+
+    /* Allow at most 0.1 % drift in either direction */
+    float tol = 0.001f * sig0;
+    ck_assert_msg(sig0 - sig_min <= tol,
+                  "Signal dropped by %.4f%% without a gradient (max 0.1%%)",
+                  100.0f * (sig0 - sig_min) / sig0);
+    ck_assert_msg(sig_max - sig0 <= tol,
+                  "Signal grew by %.4f%% without a gradient (max 0.1%%)",
+                  100.0f * (sig_max - sig0) / sig0);
+}
+END_TEST
+
 /* ---- 2011 reference regression ---------------------------------------- */
 /*
  * Runs the simulation with the exact 2011 parameters (bigdelta=5 ms,
