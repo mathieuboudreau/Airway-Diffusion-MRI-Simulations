@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            cmake \
+            gcc \
+            libgsl-dev \
+            libhdf5-dev \
+            check
+
+      - name: Configure (CMake)
+        run: cmake -B build -S .
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run unit tests
+        # With cmake -B build, RUNTIME_OUTPUT_DIRECTORY "../bin" resolves to
+        # build/bin/ relative to the project root.
+        run: ./build/bin/unit_tests
+
+      - name: Smoke-test geometry generation
+        # Confirm volume_2_hdf5 runs without error for both parameter sets.
+        # The full diffusion_sim run is covered by the bloch_torrey unit test.
+        run: |
+          ./build/bin/volume_2_hdf5 /tmp/healthy.hdf5 healthy
+          echo "healthy geometry: OK"
+          ./build/bin/volume_2_hdf5 /tmp/disease.hdf5 disease
+          echo "disease geometry: OK"
