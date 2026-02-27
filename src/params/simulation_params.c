@@ -30,3 +30,21 @@ struct SimulationParams setupDefaultSimulationParams(void)
 
     return p;
 }
+
+struct SimulationParams setup2011SimulationParams(void)
+{
+    struct SimulationParams p;
+
+    /* Xe-129, matching the 2011 grad-student version of the simulation.
+     * He = -11860390 Hz/T, gammaHe = (int)(2*pi*He) = -74502697 rad/s/T
+     * (the original code truncated to int; the tiny difference from the
+     * precise double value is negligible but we replicate it for fidelity). */
+    p.DHe      = 6.1e-6;
+    p.gamma    = (double)((int)(2.0 * M_PI * (-11860390.0)));  /* = -74502697 */
+    p.bigdelta = 5e-3;
+    p.risetime = 1e-3;
+    p.Gamp     = 0.00964813557811053;
+    p.num_angles = 30;
+
+    return p;
+}

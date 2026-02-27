@@ -12,5 +12,6 @@ struct SimulationParams
 };
 
 struct SimulationParams setupDefaultSimulationParams(void);
+struct SimulationParams setup2011SimulationParams(void);
 
 #endif
