@@ -35,6 +35,7 @@ set_target_properties(diffusion_sim PROPERTIES RUNTIME_OUTPUT_DIRECTORY ../bin)
 
 target_link_libraries (diffusion_sim gsl
                                      morphology
+                                     util
                                      params
                                      simulation
                                      m)
